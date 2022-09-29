@@ -2,8 +2,6 @@ import json
 import os.path
 from datetime import datetime
 
-import praw
-
 from googletrans import Translator
 
 import tokens
@@ -19,7 +17,6 @@ reddit = tokens.reddit
 
 #  telegram token
 tg_bot = tokens.tg_bot
-
 
 #                     ----------------------TRANSLATING----------------------
 translator = Translator()
@@ -59,14 +56,11 @@ def scrape_reddit(sub, amount):
 def get_text_messages(message):
     if message.text == "HistoryPorn":
         print('Someone used it!', datetime.now())
-        scrape_reddit('HistoryPorn', 10)
+        scrape_reddit('HistoryPorn', 3)
         f = open('hot_posts.json', 'r', encoding='utf8')
         data = json.loads(f.read())
         for line in data:
-            final_message = ''
-            for part in line:
-                final_message += part
-                final_message += '\n'
+            final_message = line[0] + '\n' + line[1]
             tg_bot.send_message(message.from_user.id, final_message)
 
     elif message.text == "/help":
@@ -77,4 +71,3 @@ def get_text_messages(message):
 
 
 tg_bot.polling(none_stop=True, interval=0)
-
