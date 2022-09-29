@@ -60,8 +60,9 @@ def get_text_messages(message):
         f = open('hot_posts.json', 'r', encoding='utf8')
         data = json.loads(f.read())
         for line in data:
-            final_message = line[0] + '\n' + line[1]
-            tg_bot.send_message(message.from_user.id, final_message)
+            #final_message = line[0] + '\n' + line[1]
+            #tg_bot.send_message(message.from_user.id, final_message)
+            tg_bot.send_photo(message.from_user.id, caption= line[0], photo=line[1])
 
     elif message.text == "/help":
         tg_bot.send_message(message.from_user.id, "Напиши HistoryPorn")
