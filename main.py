@@ -1,12 +1,10 @@
 import json
 import os.path
-from datetime import datetime
 
 from googletrans import Translator
-
-import tokens
 from telebot import *
 
+import tokens
 
 #  set time
 current_datetime = datetime.now()
@@ -41,7 +39,10 @@ def scrape_reddit(sub, amount):
             title = translate_title(post.title, 'ru').text
             # score = post.score
             url = post.url
-            posts.append([title, url])
+            if (url.find('.jpg') != -1) or (url.find('.png') != -1):
+                posts.append([title, url])
+            else:
+                print("Wrong format in", sub)
 
         with open(('hot_posts_' + sub + '.json'), 'w', encoding='utf8') as jsonFile:
             json.dump(posts, jsonFile, ensure_ascii=False)
@@ -57,20 +58,17 @@ def scrape_reddit(sub, amount):
 #                      --------------------------BOTING--------------------------
 # post creation as well as scrape calling
 def send_posts(message, sub):
+    print("Someone sent a message:", message.text, "at:", datetime.now())  # send feedback on messages
 
-    print("Someone sent a message:", message.text, "at:", datetime.now())
-
-    scrape_reddit(sub, 5)
+    scrape_reddit(sub, 7)
     f = open('hot_posts_' + sub + '.json', 'r', encoding='utf8')
     data = json.loads(f.read())
     for line in data:
-        tg_bot.send_photo(message.from_user.id,caption=line[0], photo=line[1])
-
+        tg_bot.send_photo(message.from_user.id, caption=line[0], photo=line[1])
 
 
 @tg_bot.message_handler(commands=['start'])
 def welcome(message):
-
     # keyboard
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton("HistoryPorn")
@@ -79,24 +77,24 @@ def welcome(message):
     button4 = types.KeyboardButton("Tattoos")
     button5 = types.KeyboardButton("FoodPorn")
     button6 = types.KeyboardButton("Pics")
-
-    markup.add(button1, button2, button3, button4, button5, button6)
+    button7 = types.KeyboardButton("aiArt")
+    markup.add(button1, button2, button3, button4, button5, button6, button7)
 
     tg_bot.send_message(message.chat.id,
-                     "Добро пожаловать, в Reddit Scraper.".format(
-                         message.from_user, tg_bot.get_me()),
-                     parse_mode='html', reply_markup=markup)
+                        "Добро пожаловать, в Reddit Scraper.".format(
+                            message.from_user, tg_bot.get_me()),
+                        parse_mode='html', reply_markup=markup)
 
 
 @tg_bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-
     send_posts(message, message.text)
 
     if message.text == "/help":
         tg_bot.send_message(message.from_user.id, "/start")
     # else:
     #     tg_bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
+
 
 # # Keyboard setup
 # keyboard = telebot.types.InlineKeyboardMarkup()
@@ -132,7 +130,6 @@ def get_text_messages(message):
 #
 #     # Отправляем текст в Телеграм
 #     # tg_bot.send_message(call.message.chat.id, msg)
-
 
 
 tg_bot.polling(none_stop=True, interval=0)
