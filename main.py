@@ -1,6 +1,8 @@
 import json
 import os.path
 
+import re
+
 from googletrans import Translator
 from telebot import *
 
@@ -36,7 +38,14 @@ def scrape_reddit(sub, amount):
         posts = []
         chosen_subreddit = reddit.subreddit(sub)
         for post in chosen_subreddit.hot(limit=amount):
-            title = translate_title(post.title, 'ru').text
+
+            title = (translate_title(post.title, 'ru').text)
+
+            # get rid of bracketed resolution if it's present, needs optimising
+            if title[-1] == "]":
+                no_res = re.sub(r"\[.*?]", "[]", title) # strip the resolution
+                title = re.sub(r"[[\]]", "", no_res) # strip the brackets
+
             # score = post.score
             url = post.url
             if (url.find('.jpg') != -1) or (url.find('.png') != -1):
@@ -58,13 +67,17 @@ def scrape_reddit(sub, amount):
 #                      --------------------------BOTING--------------------------
 # post creation as well as scrape calling
 def send_posts(message, sub):
-    print("Someone sent a message:", message.text, "at:", datetime.now())  # send feedback on messages
+    print("Someone sent a message:", sub, "at:", datetime.now())  # send feedback on messages
 
-    scrape_reddit(sub, 7)
+    scrape_reddit(sub, 8)
     f = open('hot_posts_' + sub + '.json', 'r', encoding='utf8')
     data = json.loads(f.read())
     for line in data:
-        tg_bot.send_photo(message.from_user.id, caption=line[0], photo=line[1])
+        try:
+            tg_bot.send_photo(message.from_user.id, caption=line[0], photo=line[1])
+        except:
+            print("Exception sending a message in", sub)
+            pass
 
 
 @tg_bot.message_handler(commands=['start'])
@@ -74,11 +87,10 @@ def welcome(message):
     button1 = types.KeyboardButton("HistoryPorn")
     button2 = types.KeyboardButton("EarthPorn")
     button3 = types.KeyboardButton("Architecture")
-    button4 = types.KeyboardButton("Tattoos")
-    button5 = types.KeyboardButton("FoodPorn")
-    button6 = types.KeyboardButton("Pics")
-    button7 = types.KeyboardButton("aiArt")
-    markup.add(button1, button2, button3, button4, button5, button6, button7)
+    button4 = types.KeyboardButton("FoodPorn")
+    button5 = types.KeyboardButton("Pics")
+    button6 = types.KeyboardButton("aiArt")
+    markup.add(button1, button2, button3, button4, button5, button6)
 
     tg_bot.send_message(message.chat.id,
                         "Добро пожаловать, в Reddit Scraper.".format(
