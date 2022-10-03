@@ -43,8 +43,7 @@ def scrape_reddit(sub, amount):
 
             # get rid of bracketed resolution if it's present, needs optimising
             if title[-1] == "]":
-                no_res = re.sub(r"\[.*?]", "[]", title) # strip the resolution
-                title = re.sub(r"[[\]]", "", no_res) # strip the brackets
+                title = re.sub(r"\[.*?]", "", title) # strip the resolution
 
             # score = post.score
             url = post.url
